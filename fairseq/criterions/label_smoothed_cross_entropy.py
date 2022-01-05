@@ -45,6 +45,7 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         self.eps = label_smoothing
         self.ignore_prefix_size = ignore_prefix_size
         self.report_accuracy = report_accuracy
+        self.concept_equalization = concept_equalization
 
     @staticmethod
     def add_args(parser):

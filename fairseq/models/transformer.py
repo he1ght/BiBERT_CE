@@ -188,6 +188,10 @@ class TransformerModel(FairseqEncoderDecoderModel):
         parser.add_argument("--use_drop_embedding", default=1, type=int,
                     help="Num of dropped embeddings")
 
+
+        parser.add_argument("--concept_equalization", action='store_true',
+                    help="Sentence representation mapping")
+
     @classmethod
     def build_model(cls, args, task):
         """Build a new model instance."""
@@ -384,6 +388,10 @@ class TransformerEncoder(FairseqEncoder):
 
         if self.pretrained_model_name:
             get_pretrained_model(self.pretrained_model_name)
+
+        if args.concept_equalization:
+            print("Adapting concept_equalization ... ")
+            self.ce_layer = nn.Linear(args.encoder_ffn_embed_dim, args.decoder_embed_dim)
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
