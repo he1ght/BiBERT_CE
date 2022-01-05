@@ -391,7 +391,7 @@ class TransformerEncoder(FairseqEncoder):
 
         if args.concept_equalization:
             print("Adapting concept_equalization ... ")
-            self.ce_layer = nn.Linear(args.encoder_ffn_embed_dim, args.decoder_embed_dim)
+            self.ce_layer = nn.Linear(args.encoder_ffn_embed_dim, args.decoder_em)
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)

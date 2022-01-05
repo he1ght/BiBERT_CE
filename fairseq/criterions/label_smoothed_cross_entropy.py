@@ -9,6 +9,16 @@ import torch
 from fairseq import metrics, utils
 from fairseq.criterions import FairseqCriterion, register_criterion
 
+def hamming_distance(inputs, target, norm=True):
+    # [n_seq x batch x v_dim]
+    v_dim = inputs.size(-1)
+
+    ret = torch.abs(inputs - target)
+    ret = torch.sum(ret, dim=-1)
+    if norm:
+        ret = ret / v_dim
+    ret = torch.mean(ret)
+    return ret
 
 def label_smoothed_nll_loss(lprobs, target, epsilon, ignore_index=None, reduce=True):
     if target.dim() == lprobs.dim() - 1:
@@ -39,6 +49,7 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         label_smoothing,
         ignore_prefix_size=0,
         report_accuracy=False,
+        concept_equalization=True,
     ):
         super().__init__(task)
         self.sentence_avg = sentence_avg
@@ -69,12 +80,15 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         """
         net_output = model(**sample["net_input"])
         loss, nll_loss = self.compute_loss(model, net_output, sample, reduce=reduce)
+        if self.concept_equalization:
+            ce_loss = self.compute_ce_loss(model, net_output, sample, reduce=reduce)
         sample_size = (
             sample["target"].size(0) if self.sentence_avg else sample["ntokens"]
         )
         logging_output = {
             "loss": loss.data,
             "nll_loss": nll_loss.data,
+            "ce_loss": ce_loss.data,
             "ntokens": sample["ntokens"],
             "nsentences": sample["target"].size(0),
             "sample_size": sample_size,
@@ -107,6 +121,22 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
             reduce=reduce,
         )
         return loss, nll_loss
+
+    def compute_ce_loss(self, model, net_output, sample, reduce=True):
+        print(net_output.size())
+        enc_output = model.encoder(**sample["net_input"])
+        print(enc_output.size())
+
+        c_s = torch.sum(enc_output, 0)
+        c_t = net_output
+        v_s = model.encoder.ce_layer(c_s)
+        v_t = torch.sum(c_t, 0)
+
+        # CE type 2 : hamming distance
+        # new_cost = euclidean_distance(v_s, v_t)
+        distance = hamming_distance(v_s, v_t)
+
+        return distance
 
     def compute_accuracy(self, model, net_output, sample):
         lprobs, target = self.get_lprobs_and_target(model, net_output, sample)
