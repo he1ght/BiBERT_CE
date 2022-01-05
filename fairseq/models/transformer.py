@@ -417,7 +417,7 @@ class TransformerEncoder(FairseqEncoder):
                     src_tokens = src_tokens[:, 1:]
 
             else:
-                token_embedding = self.embed_tokens(src_tokens)  # original embedding
+                      token_embedding = self.embed_tokens(src_tokens)  # original embedding
 
 
         x = embed = self.embed_scale * token_embedding
@@ -701,6 +701,41 @@ class TransformerDecoder(FairseqIncrementalDecoder):
 
     def build_decoder_layer(self, args, no_encoder_attn=False):
         return TransformerDecoderLayer(args, no_encoder_attn)
+
+    def forward_embedding(
+        self, tgt_tokens, token_embedding: Optional[torch.Tensor] = None
+    ):
+        # embed tokens and positions
+        if token_embedding is None:
+            if self.pretrained_model_name:
+                with torch.no_grad():
+                    device = tgt_tokens.device
+                    PRETRAINED_MODEL.to(device)
+                    bos = self.dictionary.bos() * torch.ones(tgt_tokens.shape[0], 1, dtype=torch.long, device=device)
+                    src_tokens = torch.cat((bos, tgt_tokens), dim=1)
+                    token_embedding = PRETRAINED_MODEL(src_tokens, output_hidden_states=True)[2]
+                    if self.training:
+                        random_num = torch.rand(1)
+                        token_embedding = token_embedding[-(int(random_num * self.use_drop_embedding)+1)]
+                    else:
+                        token_embedding = torch.mean(torch.stack(token_embedding[-self.use_drop_embedding:]), dim=0)
+
+                    token_embedding = token_embedding[:, 1:, :]
+                    src_tokens = src_tokens[:, 1:]
+
+            else:
+                      token_embedding = self.embed_tokens(tgt_tokens)  # original embedding
+
+
+        x = embed = self.embed_scale * token_embedding
+        if self.embed_positions is not None:
+            x = embed + self.embed_positions(src_tokens)
+        if self.layernorm_embedding is not None:
+            x = self.layernorm_embedding(x)
+        x = self.dropout_module(x)
+        if self.quant_noise is not None:
+            x = self.quant_noise(x)
+        return x, embed
 
     def forward(
         self,
