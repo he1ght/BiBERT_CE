@@ -122,13 +122,13 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         )
         return loss, nll_loss
 
-    def compute_ce_loss(self, model, net_output, sample, reduce=True):
-        print(net_output)
+    def compute_ce_loss(self, model, sample, reduce=True):
+        print(sample)
+        print(sample["net_input"])
         enc_output = model.encoder(**sample["net_input"])
         print(enc_output.size())
-
         c_s = torch.sum(enc_output, 0)
-        c_t = net_output
+        c_t = sample["net_input"]
         v_s = model.encoder.ce_layer(c_s)
         v_t = torch.sum(c_t, 0)
 
