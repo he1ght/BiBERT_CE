@@ -390,8 +390,7 @@ class TransformerEncoder(FairseqEncoder):
             get_pretrained_model(self.pretrained_model_name)
 
         if args.concept_equalization:
-            print("Adapting concept_equalization ... ")
-            self.ce_layer = nn.Linear(args.encoder_ffn_embed_dim, args.decoder_em)
+            self.ce_layer = nn.Linear(args.encoder_ffn_embed_dim, args.decoder_embed_dim)
 
     def build_encoder_layer(self, args):
         return TransformerEncoderLayer(args)
