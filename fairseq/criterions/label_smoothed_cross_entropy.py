@@ -123,7 +123,7 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         return loss, nll_loss
 
     def compute_ce_loss(self, model, sample, reduce=True):
-        print(sample)
+        # print(sample)
         print(sample["net_input"])
         enc_output = model.encoder(**sample["net_input"])
         print(enc_output.size())
