@@ -129,6 +129,7 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
                          'src_lengths': sample["net_input"]["src_lengths"]}
         enc_output = model.encoder(**encoder_input)
         # print(enc_output.size())
+        print(enc_output)
         c_s = torch.sum(enc_output, 0)
         c_t = encoder_input["src_tokens"]
         v_s = model.encoder.ce_layer(c_s)
