@@ -130,8 +130,8 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
                          'src_lengths': sample["net_input"]["src_lengths"]}
         enc_output = model.encoder(**encoder_input).encoder_out
         # print(enc_output.size())
-        print(enc_output.size())
-        c_s = torch.sum(enc_output, 1)
+        # print(enc_output.size())
+        c_s = torch.sum(enc_output, 0)
         # c_t = encoder_input["src_tokens"]
         # print(sample)
         # _, c_t = model.decoder.forward_embedding(sample["net_input"]["prev_output_tokens"], model.decoder.embed_tokens)
@@ -139,7 +139,7 @@ class LabelSmoothedCrossEntropyCriterion(FairseqCriterion):
         c_t = model.decoder.embed_scale * model.decoder.embed_tokens(sample["net_input"]["prev_output_tokens"])
         # print(c_s.size(), model.encoder.ce_layer)
         v_s = model.encoder.ce_layer(c_s)
-        print(c_t.size())
+        # print(c_t.size())
         v_t = torch.sum(c_t, 1)
 
         # CE type 2 : hamming distance
