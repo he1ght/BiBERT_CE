@@ -1,4 +1,18 @@
-This is the repository for our EMNLP 2021 paper "[BERT, mBERT, or BiBERT? A Study on Contextualized Embeddings for Neural Machine Translation](https://arxiv.org/abs/2109.04588)".
+This is the repository for our paper "[Impact of Sentence Representation Matching in Neural Machine Translation](https://www.mdpi.com/2076-3417/12/3/1313)" and the original BiBERT Paper "[BERT, mBERT, or BiBERT? A Study on Contextualized Embeddings for Neural Machine Translation](https://arxiv.org/abs/2109.04588)".
+```
+@article{jung2022impact,
+  title={Impact of Sentence Representation Matching in Neural Machine Translation},
+  author={Jung, Heeseung and Kim, Kangil and Shin, Jong-Hun and Na, Seung-Hoon and Jung, Sangkeun and Woo, Sangmin},
+  journal={Applied Sciences},
+  volume={12},
+  number={3},
+  pages={1313},
+  year={2022},
+  publisher={MDPI}
+  abstract = "Most neural machine translation models are implemented as a conditional language model framework composed of encoder and decoder models. This framework learns complex and long-distant dependencies, but its deep structure causes inefficiency in training. Matching vector representations of source and target sentences improves the inefficiency by shortening the depth from parameters to costs and generalizes NMTs with different perspective to cross-entropy loss. In this paper, we propose matching methods to derive the cost based on constant word embedding vectors of source and target sentences. To find the best method, we analyze impact of the methods with varying structures, distance metrics, and model capacity in a French to English translation task. An optimally configured method is applied to English from and to French, Spanish, and German translation tasks. In the tasks, the method showed performance improvement by 3.23 BLEU in maximum, 0.71 in average. We evaluated the robustness of this method to various embedding distributions and models as conventional gated structures and transformer network, and empirical results showed that it has higher chance to improve performance in those variety."
+}
+```
+
 ```
 @inproceedings{xu-etal-2021-bert,
     title = "{BERT}, m{BERT}, or {B}i{BERT}? A Study on Contextualized Embeddings for Neural Machine Translation",
@@ -34,71 +48,5 @@ conda activate bibert
   pip install hydra-core==1.0.3
   ```
 
-## BiBERT
-Download our pre-trained bilingual English-German BiBERT:
-```
-from transformers import BertTokenizer, AutoModel
-tokenizer = BertTokenizer.from_pretrained("jhu-clsp/bibert-ende")
-model = AutoModel.from_pretrained("jhu-clsp/bibert-ende")
-```
-An example of obtaining the contextual embeddings of the input sentence:
-```
-import torch
-text = "Hello world!"
-
-## Load model and tokenizer
-tokenizer = BertTokenizer.from_pretrained("jhu-clsp/bibert-ende")
-model = AutoModel.from_pretrained("jhu-clsp/bibert-ende")
-
-## Feed input sentence to the model
-tokens = tokenizer.convert_tokens_to_ids(tokenizer.tokenize(text))
-input_ids = torch.tensor(tokens, dtype=torch.long).unsqueeze(0)
-
-## Obtain the contextual embeddings of BiBERT
-layer = -1 # Last layer
-output = model(input_ids, output_hidden_states=True)[2][layer]
-```
-## Reproduction
-### Preprocessing
-Download and prepare IWSLT'14 dataset (if you meet warnings like `file config.json not found`, please feel safe to ignore it):
-```
-cd download_prepare
-bash download_and_prepare_data.sh
-```
-
-After download and preprocessing, three preprocessed data bin will be shown in `download_prepare` folder:
-* `data`: de->en preprocessed data for ordinary one-way translation
-* `data_mixed`: dual-directional translation data
-* `data_mixed_ft`: after dual-directional training, fine-tuning on one-way translation data
-
 ### Training
-Train a model for one-way translation. Note that passing field `--use_drop_embedding` to consider number of layers in stochastic layer selection, where the default is 8. Training with less GPUs should increase `--update-freq`, e.g., `update-freq=8` for 2 GPUs and `update-freq=4` for 4 GPUs.
-```
-bash train.sh
-```
-
-Train a model for dual-directional translation and further fine-tuning:
-```
-bash train-dual.sh
-```
-### Evaluation
-Translation for one-way model:
-```
-bash generate.sh
-```
-Translation for dual-directional model:
-```
-bash generate-dual.sh
-```
-
-The BLEU score will be printed out in the final output after running `generate.sh`.
-
-## WMT'14 Data Training 
-Download our preprocessed WMT'14 dataset [wmt-data.zip](https://drive.google.com/file/d/1wbcnqwamiI5IfZrkNlQZmhvIsuSoCqwn/view?usp=sharing)
-```
-cd download_prepare
-unzip wmt-data.zip
-```
-The resource of training data comes from [Standford WMT'14 dataset](https://nlp.stanford.edu/projects/nmt/). The data in `wmt-data` has been preprocessed the same way as IWSLT'14.
-
-Similar to IWSLT'14 training and evaluation discribed above, we train and evaluate the model by running `train-wmt.sh/train-wmt-dual.sh` and `generate-wmt.sh/generate-wmt-dual.sh`.
+The way to train a BiBERT model for translation is same with [BiBERT](https://github.com/fe1ixxu/BiBERT). Note that use `--concept_equalization` to use our proposed matching method in training. The method is only worked on the training session.
